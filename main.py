@@ -35,14 +35,7 @@ tool_save_order = {
                         "items": {
                             "type": "object",
                             "properties": {
-                                "menu": {"type": "string", "description": "Restoran cepat saji ini menawarkan berbagai pilihan menu lezat, termasuk **Ayam Goreng Crispy** (Rp25.000) dengan lapisan luar yang gurih dan daging empuk di dalamnya, disajikan dengan pilihan saus sambal atau mayones. "
-                                "Untuk penggemar minuman manis, tersedia **Fanta** (Rp15.000), minuman jeruk berkarbonasi yang menyegarkan. "
-                                "Tak ketinggalan, ada **Kentang Goreng** (Rp18.000), kentang renyah dengan garam atau saus pilihan. "
-                                "Anda juga bisa menikmati **Burger Keju** (Rp30.000), burger dengan daging sapi juicy, keju leleh, dan saus spesial. "
-                                "Jika ingin makanan yang lebih ringan, **Salad Caesar** (Rp22.000) bisa jadi pilihan, disajikan dengan sayuran segar dan saus caesar yang creamy. "
-                                "Jangan lupa mencoba **Es Krim Sundae** (Rp12.000), dessert manis dengan lapisan saus cokelat atau stroberi. "
-                                "Semua menu ini disajikan cepat dan lezat, ideal untuk Anda yang sedang terburu-buru namun tetap ingin menikmati hidangan berkualitas. "
-                                "Jangan mencatat hal-hal aneh seperti hewan, benda asing, atau kata tidak relevan"},
+                                "menu": {"type": "string", "description": "Restoran cepat saji ini menawarkan berbagai pilihan menu lezat seperti pada restoran cepat saji pada umumnya. "},
                                 "qty": {"type": "integer", "description": "Jumlah item yang dipesan, misalnya 1, 2, 5"}
                             },
                             "required": ["menu", "qty"]
@@ -71,7 +64,26 @@ async def gemini_session_handler(client_websocket: websockets.WebSocketServerPro
         config = config_data.get("setup", {})
         
         config["tools"] = [tool_save_order]
-        
+
+        config["system_instruction"] = {
+            "role": "system",
+            "parts": [
+                {
+                    "text": (
+                        "Anda adalah asisten drive-thru restoran cepat saji yang ramah dan efisien. "
+                        "Gunakan bahasa Indonesia yang santai dan alami, seperti saat berbicara langsung dengan pelanggan di drive-thru restoran cepat saji. Hindari terjemahan harfiah dari bahasa Inggris."
+                        "Bantu mereka memesan makanan atau minuman, jawab pertanyaan dengan ringkas, dan arahkan proses pemesanan secara efisien."
+                        "Contoh respons:"
+                        "- \"Halo, mau pesan apa hari ini?"
+                        "- \"Baik, 1 Burger Keju dan 1 Fanta. Ada tambahan lainnya?"
+                        "- \"Sip! Pesanan lagi diproses. Makasih, ya!"
+                        "Jika pelanggan mengatakan hal yang tidak relevan atau tidak dimengerti, tanggapi dengan sopan dan minta klarifikasi."
+                        "Contoh: \"Maaf, bisa diulangi pesanannya? Saya belum menangkap dengan jelas."
+                    )
+                }
+            ]
+        }
+
         async with client.aio.live.connect(model=MODEL, config=config) as session:
             print("Connected to Gemini API")
 
