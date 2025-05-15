@@ -5,28 +5,108 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
     <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
-
     <style>
-        #videoElement {
-            width: 320px;
-            height: 240px;
-            border-radius: 20px;
+        body {
+            background: linear-gradient(#fffbe6, #fff1d6);
+            font-family: 'Segoe UI', sans-serif;
         }
 
+        .page-content {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }  
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            flex: 1;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }    
+        
+        .camera-box {
+            background-color: #f3f3f3;
+            border: 2px dashed #ccc;
+            height: 240px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: gray;
+            font-size: 0.9rem;
+            flex-direction: column;
+            border-radius: 10px;
+        }
+        
+        #videoElement {
+            border-radius: 10px;
+            max-width: 100%;
+            height: 240px;
+            object-fit: cover;
+        }
+        
         #canvasElement {
             display: none;
         }
-
-        .demo-content {
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
+        
         .button-group {
-            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
         }
+        .orange-btn {
+            background-color: #f7630c;
+            color: white;
+            width: 100%;
+        }
+        .orange-btn:disabled {
+            background-color: #f3bfa3;
+        }
+
+        .order-tag {
+            background-color: #ffe8c5;
+            color: #a65d00;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+
+        .confirm-button {
+            width: 100%;
+            background-color: #2bb141;
+            color: white;
+            padding: 12px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+
+        .confirm-button:hover {
+            background-color: #239837;
+        }
+
+        .mdl-layout__header {
+            background-color: #cc6a00;
+        }
+
+        .mdl-layout-title {
+            color: white;
+            font-weight: bold;
+        }
+
+        #chatLog {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 5px;
+            min-height: 50px;
+            font-size: 0.9rem;
+            color: #333;
+        }   
+        
     </style>
 </head>
 
@@ -35,31 +115,40 @@
         <header class="mdl-layout__header">
             <div class="mdl-layout__header-row">
                 <!-- Title -->
-                <span class="mdl-layout-title">Gemini Live Demo</span>
+                <span class="mdl-layout-title">Drive Thru Demo</span>
             </div>
         </header>
         <main class="mdl-layout__content">
             <div class="page-content">
-                <div class="demo-content">
-                    <!-- Voice Control Buttons -->
+                <div class="card">
+                    <h5>Customer View</h5>
+                    <div class="camera-box">
+                        <!-- Video Element -->
+                        <video id="videoElement" autoplay></video>
+                    </div>
                     <div class="button-group">
                         <button id="startButton"
-                            class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab mdl-button--colored">
-                            <i class="material-icons">mic</i>
+                            class="mdl-button mdl-js-button mdl-button--raised orange-btn">
+                            <i class="material-icons">mic</i> Mulai pesanan
                         </button>
                         <button id="stopButton"
-                            class="mdl-button mdl-js-button mdl-button--fab mdl-button--mini-fab">
-                            <i class="material-icons">mic_off</i>
+                            class="mdl-button mdl-js-button mdl-button--raised orange-btn" disabled>
+                            <i class="material-icons">mic_off</i> Akhiri pesanan
                         </button>
                     </div>
-
-                    <!-- Video Element -->
-                    <video id="videoElement" autoplay></video>
-
                     <!-- Hidden Canvas -->
                     <canvas id="canvasElement"></canvas>
                     <!-- Text Output -->
-                    <div id="chatLog"></div>
+                    <div id="chatLog">Waiting for customer input...</div>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h5>Current Order</h5>
+                        <div class="order-tag">Order 123</div>
+                    </div>
+
+                    <button class="confirm-button">Confirm Order</button>
                 </div>
             </div>
         </main>
