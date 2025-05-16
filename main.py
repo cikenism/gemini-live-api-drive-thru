@@ -1,13 +1,14 @@
 import asyncio
 import json
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 import os
 import websockets
 from google import genai
 from google.genai.types import Part
+from google.genai.types import ToolUseResponse
 import base64
 
-# load_dotenv()
+load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 
 print("API_KEY:", API_KEY)
@@ -161,7 +162,10 @@ async def gemini_session_handler(client_websocket: websockets.WebSocketServerPro
 
                                            # Send function response back to Gemini
                                            print(f"function_responses: {function_responses}")
-                                           await session.send(function_responses)
+                                           response_obj = ToolUseResponse(
+                                                tool_responses=function_responses
+                                            )
+                                           await session.send(response_obj)
                                            continue
 
                                     #print(f'Unhandled server message! - {response}')
