@@ -6,7 +6,7 @@ import websockets
 from google import genai
 import base64
 
-load_dotenv()
+# load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 
 MODEL = "gemini-2.0-flash-live-001"
