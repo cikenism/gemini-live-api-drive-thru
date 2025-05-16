@@ -4,6 +4,7 @@ import json
 import os
 import websockets
 from google import genai
+from google.genai.types import Part
 import base64
 
 # load_dotenv()
@@ -95,18 +96,24 @@ async def gemini_session_handler(client_websocket: websockets.WebSocketServerPro
                     async for message in client_websocket:
                         try:
                             data = json.loads(message)
+
                             if "realtime_input" in data:
                                 for chunk in data["realtime_input"]["media_chunks"]:
-                                    payload = {
-                                        "mime_type": chunk["mime_type"],
-                                        "data": chunk["data"]
-                                    }
-                                    await session.send(payload)
+                                    mime_type = chunk.get("mime_type")
+                                    if mime_type in ["audio/pcm", "image/jpeg"]:
+                                        part = Part(
+                                            inline_data={
+                                                "mime_type": mime_type,
+                                                "data": chunk["data"]
+                                            }
+                                        )
+                                        await session.send(part)
+
                         except Exception as e:
                             print(f"Error sending to Gemini (inner): {e}")
                     print("Client connection closed (send)")
                 except Exception as e:
-                    print(f"Error sending to Gemini (outer): {e}")
+                    print(f"Error sending to Gemini: {e}")
                 finally:
                     print("send_to_gemini closed")
 
