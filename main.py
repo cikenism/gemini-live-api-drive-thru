@@ -4,7 +4,7 @@ import json
 import os
 import websockets
 from google import genai
-from google.genai.types import Part, ToolUseResponse
+from google.genai.types import Part
 import base64
 
 # load_dotenv()
@@ -161,10 +161,7 @@ async def gemini_session_handler(client_websocket: websockets.WebSocketServerPro
 
                                            # Send function response back to Gemini
                                            print(f"function_responses: {function_responses}")
-                                           response_obj = ToolUseResponse(
-                                                tool_responses=function_responses
-                                            )
-                                           await session.send(response_obj)
+                                           await session.send(function_responses)
                                            continue
 
                                     #print(f'Unhandled server message! - {response}')
