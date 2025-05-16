@@ -1,14 +1,13 @@
 import asyncio
 import json
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import os
 import websockets
 from google import genai
-from google.genai.types import Part
-from google.genai.types import ToolUseResponse
+from google.genai.types import Part, ToolUseResponse
 import base64
 
-load_dotenv()
+# load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 
 print("API_KEY:", API_KEY)
