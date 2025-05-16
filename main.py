@@ -9,6 +9,8 @@ import base64
 # load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 
+print("API_KEY:", API_KEY)
+
 MODEL = "gemini-2.0-flash-live-001"
 
 client = genai.Client(
