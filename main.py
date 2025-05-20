@@ -10,7 +10,7 @@ import base64
 # load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 
-print("API_KEY:", API_KEY)
+# print("API_KEY:", API_KEY)
 
 MODEL = "gemini-2.0-flash-live-001"
 
@@ -21,38 +21,35 @@ client = genai.Client(
     }
 )
 
-def save_order(items: list[str]):
-    print("\n📝 Pesanan Disimpan:", items)
-    return {"status": "ok", "pesanan": items}
+def save_order(menu, qty):
 
+    return {
+        "menu": menu,
+        "qty": qty,
+    }
+
+# Define the tool (function)
 tool_save_order = {
     "function_declarations": [
         {
             "name": "save_order",
             "description": "menyimpan pesanan makanan atau minuman pelanggan ke sistem.",
             "parameters": {
-                "type": "object",
+                "type": "OBJECT",
                 "properties": {
-                    "items": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "menu": {"type": "string", "description": "Restoran cepat saji ini menawarkan berbagai pilihan menu lezat seperti pada restoran cepat saji pada umumnya. "},
-                                "qty": {"type": "integer", "description": "Jumlah item yang dipesan, misalnya 1, 2, 5"}
-                            },
-                            "required": ["menu", "qty"]
-                        }
+                    "menu": {
+                        "type": "STRING",
+                        "description": "Restoran cepat saji ini menawarkan berbagai pilihan menu lezat seperti pada restoran cepat saji pada umumnya. "
                     },
-                    "note": {
-                        "type": "string",
-                        "description": "Catatan tambahan dari pelanggan"
+                    "qty": {
+                        "type": "INTEGER",
+                        "description": "Jumlah item yang dipesan, misalnya 1, 2, 5"
                     }
                 },
-                "required": ["items"]
-            },
+                "required": ["menu", "qty"]
+            }
         }
-    ] 
+    ]
 }
 
 async def gemini_session_handler(client_websocket: websockets.WebSocketServerProtocol):
@@ -67,7 +64,7 @@ async def gemini_session_handler(client_websocket: websockets.WebSocketServerPro
         config = config_data.get("setup", {})
         
         config["tools"] = [tool_save_order]
-
+        
         config["system_instruction"] = {
             "role": "system",
             "parts": [
@@ -87,35 +84,39 @@ async def gemini_session_handler(client_websocket: websockets.WebSocketServerPro
             ]
         }
 
+        config["speech_config"] = types.SpeechConfig(
+            # language_code="id-ID",
+            voice_config=types.VoiceConfig(
+                prebuilt_voice_config=types.PrebuiltVoiceConfig(voice_name="Kore"),
+            )
+        )
+
         async with client.aio.live.connect(model=MODEL, config=config) as session:
             print("Connected to Gemini API")
 
             async def send_to_gemini():
                 """Sends messages from the client websocket to the Gemini API."""
                 try:
-                    async for message in client_websocket:
-                        try:
-                            data = json.loads(message)
-
-                            if "realtime_input" in data:
-                                for chunk in data["realtime_input"]["media_chunks"]:
-                                    mime_type = chunk.get("mime_type")
-                                    if mime_type in ["audio/pcm", "image/jpeg"]:
-                                        part = Part(
-                                            inline_data={
-                                                "mime_type": mime_type,
-                                                "data": chunk["data"]
-                                            }
-                                        )
-                                        await session.send(part)
-
-                        except Exception as e:
-                            print(f"Error sending to Gemini (inner): {e}")
-                    print("Client connection closed (send)")
+                  async for message in client_websocket:
+                      try:
+                          data = json.loads(message)
+                          if "realtime_input" in data:
+                              for chunk in data["realtime_input"]["media_chunks"]:
+                                  if chunk["mime_type"] == "audio/pcm":
+                                      await session.send({"mime_type": "audio/pcm", "data": chunk["data"]})
+                                      
+                                  elif chunk["mime_type"] == "image/jpeg":
+                                      await session.send({"mime_type": "image/jpeg", "data": chunk["data"]})
+                                      
+                      except Exception as e:
+                          print(f"Error sending to Gemini: {e}")
+                  print("Client connection closed (send)")
                 except Exception as e:
-                    print(f"Error sending to Gemini: {e}")
+                     print(f"Error sending to Gemini: {e}")
                 finally:
-                    print("send_to_gemini closed")
+                   print("send_to_gemini closed")
+
+
 
             async def receive_from_gemini():
                 """Receives responses from the Gemini API and forwards them to the client, looping until turn is complete."""
@@ -143,7 +144,7 @@ async def gemini_session_handler(client_websocket: websockets.WebSocketServerPro
                                                  # Validate function name
                                                  if name == "save_order":
                                                       try:
-                                                          result = save_order(args["items"])
+                                                          result = save_order(args["menu"], int(args["qty"]))
                                                           function_responses.append(
                                                              {
                                                                  "name": name,
@@ -212,16 +213,11 @@ async def gemini_session_handler(client_websocket: websockets.WebSocketServerPro
         print("Gemini session closed.")
 
 
-# async def main() -> None:
-#     async with websockets.serve(gemini_session_handler, "localhost", 9082):
-#         print("Running websocket server localhost:9082...")
-#         await asyncio.Future()  # Keep the server running indefinitely
-
 async def main() -> None:
-    port = int(os.environ.get("PORT", 8000))  # Gunakan PORT dari Railway
-    async with websockets.serve(gemini_session_handler, "0.0.0.0", port):
-        print(f"Running websocket server on 0.0.0.0:{port}...")
-        await asyncio.Future()
+    async with websockets.serve(gemini_session_handler, "localhost", 9082):
+        print("Running websocket server localhost:9082...")
+        await asyncio.Future()  # Keep the server running indefinitely
+
 
 if __name__ == "__main__":
     asyncio.run(main())
