@@ -12,7 +12,7 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 
 # print("API_KEY:", API_KEY)
 
-MODEL = "gemini-2.0-flash-live-001"
+MODEL = "gemini-2.0-flash-exp"
 
 client = genai.Client(
     api_key=API_KEY,
