@@ -98,15 +98,36 @@
         }
 
         #chatLog {
-            margin-top: 10px;
-            padding: 10px;
-            background: #f8f8f8;
-            border-radius: 5px;
-            min-height: 50px;
-            font-size: 0.9rem;
-            color: #333;
+            display: none;
         }   
         
+        #orderList {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fff4e0;
+            padding: 10px 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            font-size: 0.95rem;
+        }
+
+        .order-menu {
+            font-weight: 600;
+            color: #4a2e00;
+        }
+
+        .order-qty {
+            font-size: 0.9rem;
+            color: #a65d00;
+        }
+
     </style>
 </head>
 
@@ -121,7 +142,7 @@
         <main class="mdl-layout__content">
             <div class="page-content">
                 <div class="card">
-                    <h5>Customer View</h5>
+                    <h5>Selamat Datang!</h5>
                     <div class="camera-box">
                         <!-- Video Element -->
                         <video id="videoElement" autoplay></video>
@@ -132,7 +153,7 @@
                             <i class="material-icons">mic</i> Mulai pesanan
                         </button>
                         <button id="stopButton"
-                            class="mdl-button mdl-js-button mdl-button--raised orange-btn" disabled>
+                            class="mdl-button mdl-js-button mdl-button--raised orange-btn">
                             <i class="material-icons">mic_off</i> Akhiri pesanan
                         </button>
                     </div>
@@ -144,11 +165,13 @@
 
                 <div class="card">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <h5>Current Order</h5>
-                        <div class="order-tag">Order 123</div>
+                        <h5>Orderan Anda</h5>
+                        <div id="orderTag" class="order-tag">Order</div>
                     </div>
 
-                    <button class="confirm-button">Confirm Order</button>
+                    <ul id="orderList" style="margin-top: 10px; padding-left: 20px;"></ul>
+
+                    <button id="confirmButton" class="confirm-button" style="display: none;">Konfirmasi Order</button>
                 </div>
             </div>
         </main>
@@ -240,7 +263,7 @@
             setup_client_message = {
                 setup: {
                     generation_config: { 
-                        // response_modalities: ["AUDIO"] 
+                        response_modalities: ["AUDIO"] 
                     },
                   },
                 };
@@ -277,14 +300,64 @@
             const messageData = JSON.parse(event.data);
             const response = new Response(messageData);
 
-            if(response.text){
+            // Tampilkan pesan asli ke chatLog
+            if (response.text) {
                 displayMessage("GEMINI: " + response.text);
+
+                // Coba parse text jika dia JSON string
+                try {
+                    const parsed = JSON.parse(response.text);
+                    if (Array.isArray(parsed)) {
+                        parsed.forEach((item) => {
+                            if (item.name === "save_order" && item.response?.result) {
+                                const { menu, qty } = item.response.result;
+                                updateCurrentOrderUI(menu, qty);
+                            }
+                        });
+                    }
+                } catch (err) {
+                    console.warn("Teks bukan JSON yang valid:", err);
+                }
             }
-            if(response.audioData){
-              injestAudioChuckToPlay(response.audioData);
+
+            if (response.audioData) {
+                injestAudioChuckToPlay(response.audioData);
+            }
+
+            // Tangani juga jika Gemini mengirim langsung dalam bentuk objek
+            if (messageData.order && messageData.order.menu && messageData.order.qty) {
+                updateCurrentOrderUI(messageData.order.menu, messageData.order.qty);
             }
         }
 
+        function updateCurrentOrderUI(menu, qty) {
+            const orderList = document.getElementById("orderList");
+
+            const listItem = document.createElement("li");
+            listItem.className = "order-item";
+            listItem.innerHTML = `
+                <span class="order-menu">${menu}</span>
+                <span class="order-qty">&times; ${qty}</span>
+            `;
+
+            orderList.appendChild(listItem);
+
+                // Tampilkan tombol jika list tidak kosong
+            if (orderList.children.length > 0) {
+                confirmButton.style.display = "block";
+            }
+        }
+
+        function generateRandomOrderId() {
+            // Misalnya acak dari 10000 hingga 99999
+            return Math.floor(10000 + Math.random() * 90000);
+        }
+
+        window.addEventListener("DOMContentLoaded", () => {
+        const orderTag = document.getElementById("orderTag");
+        const randomId = generateRandomOrderId();
+        orderTag.textContent = `Order ${randomId}`;
+        });
 
          async function initializeAudioContext() {
           if (initialized) return;
