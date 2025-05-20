@@ -4,7 +4,7 @@ import json
 import os
 import websockets
 from google import genai
-from google.genai.types import Part
+from google.genai import types
 import base64
 
 # load_dotenv()
@@ -214,10 +214,10 @@ async def gemini_session_handler(client_websocket: websockets.WebSocketServerPro
 
 
 async def main() -> None:
-    async with websockets.serve(gemini_session_handler, "localhost", 9082):
-        print("Running websocket server localhost:9082...")
-        await asyncio.Future()  # Keep the server running indefinitely
-
+    port = int(os.environ.get("PORT", 8000))  # Gunakan PORT dari Railway
+    async with websockets.serve(gemini_session_handler, "0.0.0.0", port):
+        print(f"Running websocket server on 0.0.0.0:{port}...")
+        await asyncio.Future()
 
 if __name__ == "__main__":
     asyncio.run(main())
